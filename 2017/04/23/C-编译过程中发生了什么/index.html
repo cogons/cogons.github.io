@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>C++编译过程中发生了什么 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="四个阶段c++的编译过程 gcc -o hw.exe  hw.c 大致可分为四个阶段：预编译、编译、汇编、链接。 1. 预编译 cppmain.cpp –&amp;gt; main.i  cpp hw.c -o hw.igcc -E hello.c -o hello.i  对其中的伪指令（以#开头的指令）和特殊符号进行处理。   宏 #define 条件编译指令 #ifdef，#ifndef，#else，">
+<meta name="keywords" content="Originals">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++编译过程中发生了什么">
+<meta property="og:url" content="http://cogons.github.io/2017/04/23/C-编译过程中发生了什么/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="四个阶段c++的编译过程 gcc -o hw.exe  hw.c 大致可分为四个阶段：预编译、编译、汇编、链接。 1. 预编译 cppmain.cpp –&amp;gt; main.i  cpp hw.c -o hw.igcc -E hello.c -o hello.i  对其中的伪指令（以#开头的指令）和特殊符号进行处理。   宏 #define 条件编译指令 #ifdef，#ifndef，#else，">
+<meta property="og:updated_time" content="2017-10-11T17:29:07.399Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++编译过程中发生了什么">
+<meta name="twitter:description" content="四个阶段c++的编译过程 gcc -o hw.exe  hw.c 大致可分为四个阶段：预编译、编译、汇编、链接。 1. 预编译 cppmain.cpp –&amp;gt; main.i  cpp hw.c -o hw.igcc -E hello.c -o hello.i  对其中的伪指令（以#开头的指令）和特殊符号进行处理。   宏 #define 条件编译指令 #ifdef，#ifndef，#else，">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://cogons.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-C-编译过程中发生了什么" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/04/23/C-编译过程中发生了什么/" class="article-date">
+  <time datetime="2017-04-23T08:00:05.000Z" itemprop="datePublished">2017-04-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      C++编译过程中发生了什么
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="四个阶段"><a href="#四个阶段" class="headerlink" title="四个阶段"></a>四个阶段</h1><p>c++的编译过程</p>
+<p>gcc -o hw.exe  hw.c</p>
+<p>大致可分为四个阶段：预编译、编译、汇编、链接。</p>
+<h2 id="1-预编译-cpp"><a href="#1-预编译-cpp" class="headerlink" title="1. 预编译 cpp"></a>1. 预编译 cpp</h2><p>main.cpp –&gt; main.i</p>
+<blockquote>
+<p>cpp hw.c -o hw.i<br>gcc -E hello.c -o hello.i</p>
+</blockquote>
+<p>对其中的伪指令（以#开头的指令）和特殊符号进行处理。</p>
+<blockquote>
+<ol>
+<li>宏 #define</li>
+<li>条件编译指令 #ifdef，#ifndef，#else，#elif，#endif等</li>
+<li>头文件include</li>
+<li>特殊符号 LINE FILE</li>
+</ol>
+</blockquote>
+<h2 id="2-编译和优化-cc1-as"><a href="#2-编译和优化-cc1-as" class="headerlink" title="2. 编译和优化 cc1/as"></a>2. 编译和优化 cc1/as</h2><p>main.i –&gt; main.s</p>
+<blockquote>
+<p>cc1 hw.i -o hw.s<br>gcc -S hello.i -o hello.s </p>
+</blockquote>
+<p>通过词法分析，语法分析，语义分析及代码优化，把预处理完的文件翻译成等价的中间代码表示或汇编代码。</p>
+<p>编译单元：一个cpp文件和它include的头文件。当一个c或cpp文件在编译时，预处理器首先递归包含头文件，形成一个含有所有必要信息的单个源文件，这个源文件就是一个编译单元。</p>
+<p>内部连接：如果一个名称对编译单元(.cpp)来说是局部的，在链接的时候其他的编译单元无法链接到它且不会与其它编译单元(.cpp)中的同样的名称相冲突。</p>
+<p>外部连接：如果一个名称对编译单元(.cpp)来说不是局部的，而在链接的时候其他的编译单元可以访问它，也就是说它可以和别的编译单元交互。</p>
+<h2 id="3-汇编-as"><a href="#3-汇编-as" class="headerlink" title="3. 汇编 as"></a>3. 汇编 as</h2><p>main.s –&gt; main.o(依赖的其它 *.o)</p>
+<blockquote>
+<p>as hw.s -o hw.o<br>gcc -c hello.s -o hello.o</p>
+</blockquote>
+<p>根据汇编指令和机器指令的对照表一一翻译，将汇编代码转变成机器可以执行的命令。</p>
+<p>编译后生成的文件，以机器码的形式包含了编译单元里的所有函数和数据、导出符号表、未解决符号表、地址重定向表等。</p>
+<h2 id="4-链接-ld"><a href="#4-链接-ld" class="headerlink" title="4. 链接 ld"></a>4. 链接 ld</h2><p>main.o(依赖的其它 *.o) –&gt; main可执行程序</p>
+<blockquote>
+<p>ld hw.o -o hw.exe<br>gcc hello.o -o hello.exe</p>
+</blockquote>
+<p>.out<br>linux:.so .o .a<br>windows:.dll .exe .obj .lib</p>
+<p>.o 是一个最小的编译单元<br>.a 就是一组 .o文件打包了<br>.so 除了没有 main 函数，和一个可执行程类似了。</p>
+<p>调用链接器ld, 链接程序运行所依赖的目标文件，以及所依赖的其它库文件，最后生成可执行文件。</p>
+<p>链接过程是将单个编译后的文件链接成一个可执行程序。前面的预编译、汇编、编译都是正对单个文件，以一个文件为一个编译单元，而链接则是将所有关联到的编译后单元文件和应用的到库文件，进行一次链接处理，之前编译过的文件 如果有用到其他文件里面定义到的函数，全局变量，在这个过程中都会进行解析。</p>
+<p>静态链接库(.lib)和动态链接库(.dll)都是共享代码的方式。如果采用了静态链接库，则无论你愿不愿意lib中的代码指令都被直接包含进了最终生成的.exe程序中。但若是使用了动态链接库，该DLL则不会被包含进.exe程序中，当.exe程序执行的时候，再“动态”的来引用或者卸载DLL。</p>
+<p>参考资料：</p>
+<p><a href="http://blog.csdn.net/edisonlg/article/details/7081357" target="_blank" rel="external">http://blog.csdn.net/edisonlg/article/details/7081357</a><br><a href="http://www.cnblogs.com/magicsoar/p/3840682.html" target="_blank" rel="external">http://www.cnblogs.com/magicsoar/p/3840682.html</a><br><a href="http://www.cnblogs.com/dongdongweiwu/p/4743709.html" target="_blank" rel="external">http://www.cnblogs.com/dongdongweiwu/p/4743709.html</a><br><a href="http://blog.csdn.net/yinzhuo1/article/details/47069201" target="_blank" rel="external">http://blog.csdn.net/yinzhuo1/article/details/47069201</a><br><a href="http://www.cnblogs.com/litterrondo/archive/2013/01/28/2880281.html" target="_blank" rel="external">http://www.cnblogs.com/litterrondo/archive/2013/01/28/2880281.html</a><br><a href="http://www.cnblogs.com/vamei/archive/2013/04/04/2998850.html" target="_blank" rel="external">http://www.cnblogs.com/vamei/archive/2013/04/04/2998850.html</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://cogons.github.io/2017/04/23/C-编译过程中发生了什么/" data-id="cj8nb80ir00011npggu5umzsz" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Originals/">Originals</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/04/30/MacOS下Hadoop安装记/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Neuer</strong>
+      <div class="article-nav-title">
+        
+          MacOS下Hadoop安装记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/04/17/issvue-Everything-about-it/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">issvue: Everything about it</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Angular2/">Angular2</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Originals/">Originals</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/">blog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/translation/">translation</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Angular2/" style="font-size: 15px;">Angular2</a> <a href="/tags/Originals/" style="font-size: 20px;">Originals</a> <a href="/tags/blog/" style="font-size: 10px;">blog</a> <a href="/tags/translation/" style="font-size: 10px;">translation</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/10/11/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2017/06/14/基于JavaScript的图像处理库/">基于JavaScript的图像处理库</a>
+          </li>
+        
+          <li>
+            <a href="/2017/05/03/Add-new-include-path-to-node-gyp/">Add new include path to node-gyp</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/30/MacOS下Hadoop安装记/">MacOS下Hadoop安装记</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/23/C-编译过程中发生了什么/">C++编译过程中发生了什么</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

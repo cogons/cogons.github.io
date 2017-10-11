@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>理解JavaScript中的函数调用和this | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Over the years, I’ve seen a lot of confusion about JavaScript function invocation. In particular, a lot of people have complained that the semantics of this in function invocations is confusing.  这些年">
+<meta name="keywords" content="translation">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解JavaScript中的函数调用和this">
+<meta property="og:url" content="http://cogons.github.io/2017/03/26/理解JavaScript中的函数调用和this/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Over the years, I’ve seen a lot of confusion about JavaScript function invocation. In particular, a lot of people have complained that the semantics of this in function invocations is confusing.  这些年">
+<meta property="og:updated_time" content="2017-10-11T17:29:07.403Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解JavaScript中的函数调用和this">
+<meta name="twitter:description" content="Over the years, I’ve seen a lot of confusion about JavaScript function invocation. In particular, a lot of people have complained that the semantics of this in function invocations is confusing.  这些年">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://cogons.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-理解JavaScript中的函数调用和this" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/03/26/理解JavaScript中的函数调用和this/" class="article-date">
+  <time datetime="2017-03-26T14:19:27.000Z" itemprop="datePublished">2017-03-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      理解JavaScript中的函数调用和this
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>Over the years, I’ve seen a lot of confusion about JavaScript function invocation. In particular, a lot of people have complained that the semantics of this in function invocations is confusing.</p>
+</blockquote>
+<p>这些年，我发现很多人都对JavaScript中函数调用感到困惑，对函数调用中的“this”更是一头雾水。</p>
+<blockquote>
+<p>In my opinion, a lot of this confusion is cleared up by understanding the core function invocation primitive, and then looking at all other ways of invoking a function as sugar on top of that primitive. In fact, this is exactly how the ECMAScript spec thinks about it. In some areas, this post is a simplification of the spec, but the basic idea is the same.</p>
+</blockquote>
+<p>在我看来，问题的关键在于需要去理解函数调用的核心语法，然后去观察其他基于这个核心语法实现的函数调用的语法糖。事实上，这也正是ECMAScript标准所做的。在某些方面，这篇博客就是标准的简化，但是基本观点是一致的。</p>
+<h1 id="核心语法-The-Core-Primitive"><a href="#核心语法-The-Core-Primitive" class="headerlink" title="核心语法 The Core Primitive"></a>核心语法 The Core Primitive</h1><p>First, let’s look at the core function invocation primitive, a Function’s call method[1]. The call method is relatively straight forward.</p>
+<p>首先，我们看一下函数调用的核心语法，函数的call方法。这个方法是相对来说比较直截了当的。</p>
+<blockquote>
+<p>Make an argument list (argList) out of parameters 1 through the end<br>The first parameter is thisValue<br>Invoke the function with this set to thisValue and the argList as its argument list</p>
+</blockquote>
+<ol>
+<li>除去第一个参数，后面是一个参数列表argList。</li>
+<li>第一个参数是 thisValue</li>
+<li>用thisValue赋值的this和arglist构成的参数列表去调用函数。</li>
+</ol>
+<p>For example:</p>
+<p>function hello(thing) {<br>  console.log(this + “ says hello “ + thing);<br>}</p>
+<p>hello.call(“Yehuda”, “world”) //=&gt; Yehuda says hello world  </p>
+<p>As you can see, we invoked the hello method with this set to “Yehuda” and a single argument “world”. This is the core primitive of JavaScript function invocation. You can think of all other function calls as desugaring to this primitive. (to “desugar” is to take a convenient syntax and describe it in terms of a more basic core primitive).</p>
+<p>显而易见，我们调用了hello方法，参数为：this（赋值为“Yehuda”），以及单个参数“world”。</p>
+<p>这是JS函数调用的核心语法。你可以将其他函数调用方法用这种基本核心语法来描述。</p>
+<p>[1] In the ES5 spec, the call method is described in terms of another, more low level primitive, but it’s a very thin wrapper on top of that primitive, so I’m simplifying a bit here. See the end of this post for more information.</p>
+<p>在ES5中，这种call方法是用更基础的语法来描述的。</p>
+<h1 id="Simple-Function-Invocation"><a href="#Simple-Function-Invocation" class="headerlink" title="Simple Function Invocation"></a>Simple Function Invocation</h1><p>Obviously, invoking functions with call all the time would be pretty annoying. JavaScript allows us to invoke functions directly using the parens syntax (hello(“world”). When we do that, the invocation desugars:</p>
+<p>显然，如果从头到尾都用call来进行函数调用，是有点烦人的。还好JS允许我们直接使用parens语法来调用函数。</p>
+<p>function hello(thing) {<br>  console.log(“Hello “ + thing);<br>}</p>
+<p>// this:<br>hello(“world”)</p>
+<p>// desugars to:<br>hello.call(window, “world”);  </p>
+<p>This behavior has changed in ECMAScript 5 only when using strict mode[2]:</p>
+<p>// this:<br>hello(“world”)</p>
+<p>// desugars to:<br>hello.call(undefined, “world”);  </p>
+<p>The short version is: a function invocation like fn(…args) is the same as fn.call(window [ES5-strict: undefined], …args).</p>
+<p>Note that this is also true about functions declared inline: (function() {})() is the same as (function() {}).call(window [ES5-strict: undefined).</p>
+<p>[2] Actually, I lied a bit. The ECMAScript 5 spec says that undefined is (almost) always passed, but that the function being called should change its thisValue to the global object when not in strict mode. This allows strict mode callers to avoid breaking existing non-strict-mode libraries.</p>
+<h1 id="Member-Functions"><a href="#Member-Functions" class="headerlink" title="Member Functions"></a>Member Functions</h1><p>The next very common way to invoke a method is as a member of an object (person.hello()). In this case, the invocation desugars:</p>
+<p>var person = {<br>  name: “Brendan Eich”,<br>  hello: function(thing) {<br>    console.log(this + “ says hello “ + thing);<br>  }<br>}</p>
+<p>// this:<br>person.hello(“world”)</p>
+<p>// desugars to this:<br>person.hello.call(person, “world”);  </p>
+<p>Note that it doesn’t matter how the hello method becomes attached to the object in this form. Remember that we previously defined hello as a standalone function. Let’s see what happens if we attach is to the object dynamically:</p>
+<p>function hello(thing) {<br>  console.log(this + “ says hello “ + thing);<br>}</p>
+<p>person = { name: “Brendan Eich” }<br>person.hello = hello;</p>
+<p>person.hello(“world”) // still desugars to person.hello.call(person, “world”)</p>
+<p>hello(“world”) // “[object DOMWindow]world”  </p>
+<p>Notice that the function doesn’t have a persistent notion of its ‘this’. It is always set at call time based upon the way it was invoked by its caller.</p>
+<h1 id="Using-Function-prototype-bind"><a href="#Using-Function-prototype-bind" class="headerlink" title="Using Function.prototype.bind"></a>Using Function.prototype.bind</h1><p>Because it can sometimes be convenient to have a reference to a function with a persistent this value, people have historically used a simple closure trick to convert a function into one with an unchanging this:</p>
+<p>var person = {<br>  name: “Brendan Eich”,<br>  hello: function(thing) {<br>    console.log(this.name + “ says hello “ + thing);<br>  }<br>}</p>
+<p>var boundHello = function(thing) { return person.hello.call(person, thing); }</p>
+<p>boundHello(“world”);  </p>
+<p>Even though our boundHello call still desugars to boundHello.call(window, “world”), we turn right around and use our primitive call method to change the this value back to what we want it to be.</p>
+<p>We can make this trick general-purpose with a few tweaks:</p>
+<p>var bind = function(func, thisValue) {<br>  return function() {<br>    return func.apply(thisValue, arguments);<br>  }<br>}</p>
+<p>var boundHello = bind(person.hello, person);<br>boundHello(“world”) // “Brendan Eich says hello world”  </p>
+<p>In order to understand this, you just need two more pieces of information. First, arguments is an Array-like object that represents all of the arguments passed into a function. Second, the apply method works exactly like the call primitive, except that it takes an Array-like object instead of listing the arguments out one at a time.</p>
+<p>Our bind method simply returns a new function. When it is invoked, our new function simply invokes the original function that was passed in, setting the original value as this. It also passes through the arguments.</p>
+<p>Because this was a somewhat common idiom, ES5 introduced a new method bind on all Function objects that implements this behavior:</p>
+<p>var boundHello = person.hello.bind(person);<br>boundHello(“world”) // “Brendan Eich says hello world”  </p>
+<p>This is most useful when you need a raw function to pass as a callback:</p>
+<p>var person = {<br>  name: “Alex Russell”,<br>  hello: function() { console.log(this.name + “ says hello world”); }<br>}</p>
+<p>$(“#some-div”).click(person.hello.bind(person));</p>
+<p>// when the div is clicked, “Alex Russell says hello world” is printed</p>
+<p>This is, of course, somewhat clunky, and TC39 (the committee that works on the next version(s) of ECMAScript) continues to work on a more elegant, still-backwards-compatible solution.<br>On jQuery</p>
+<p>Because jQuery makes such heavy use of anonymous callback functions, it uses the call method internally to set the this value of those callbacks to a more useful value. For instance, instead of receiving window as this in all event handlers (as you would without special intervention), jQuery invokes call on the callback with the element that set up the event handler as its first parameter.</p>
+<p>This is extremely useful, because the default value of this in anonymous callbacks is not particularly useful, but it can give beginners to JavaScript the impression that this is, in general a strange, often mutated concept that is hard to reason about.</p>
+<p>If you understand the basic rules for converting a sugary function call into a desugared func.call(thisValue, …args), you should be able to navigate the not so treacherous waters of the JavaScript this value.</p>
+<p>this-table.png<br>PS: I Cheated</p>
+<p>In several places, I simplified the reality a bit from the exact wording of the specification. Probably the most important cheat is the way I called func.call a “primitive”. In reality, the spec has a primitive (internally referred to as [[Call]]) that both func.call and [obj.]func() use.</p>
+<p>However, take a look at the definition of func.call:</p>
+<blockquote>
+<p>If IsCallable(func) is false, then throw a TypeError exception.<br>Let argList be an empty List.<br>If this method was called with more than one argument then in left to right order starting with arg1 append each argument as the last element of argList<br>Return the result of calling the [[Call]] internal method of func, providing thisArg as the this value and argList as the list of arguments.</p>
+</blockquote>
+<p>As you can see, this definition is essentially a very simple JavaScript language binding to the primitive [[Call]] operation.</p>
+<p>If you look at the definition of invoking a function, the first seven steps set up thisValue and argList, and the last step is: “Return the result of calling the [[Call]] internal method on func, providing thisValue as the this value and providing the list argList as the argument values.”</p>
+<p>It’s essentially identical wording, once the argList and thisValue have been determined.</p>
+<p>I cheated a bit in calling call a primitive, but the meaning is essentially the same as had I pulled out the spec at the beginning of this article and quoted chapter and verse.</p>
+<p>There are also some additional cases (most notably involving with) that I didn’t cover here.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://cogons.github.io/2017/03/26/理解JavaScript中的函数调用和this/" data-id="cj8nb80je000e1npg9389cgdk" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/translation/">translation</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/27/JavaScript中的面向对象（1）：对象创建模式/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Neuer</strong>
+      <div class="article-nav-title">
+        
+          JavaScript中的面向对象（1）：对象创建模式
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Angular2/">Angular2</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Originals/">Originals</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/">blog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/translation/">translation</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Angular2/" style="font-size: 15px;">Angular2</a> <a href="/tags/Originals/" style="font-size: 20px;">Originals</a> <a href="/tags/blog/" style="font-size: 10px;">blog</a> <a href="/tags/translation/" style="font-size: 10px;">translation</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/10/11/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2017/06/14/基于JavaScript的图像处理库/">基于JavaScript的图像处理库</a>
+          </li>
+        
+          <li>
+            <a href="/2017/05/03/Add-new-include-path-to-node-gyp/">Add new include path to node-gyp</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/30/MacOS下Hadoop安装记/">MacOS下Hadoop安装记</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/23/C-编译过程中发生了什么/">C++编译过程中发生了什么</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

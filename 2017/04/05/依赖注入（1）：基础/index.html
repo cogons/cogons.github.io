@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>依赖注入（1）：基础 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="为什么需要依赖注入：生产者的苦恼一个car对象依赖于engine对象和tire对象，也就是说car对象内部存在对engine的“调用”。 那么就存在多种方法去引用engine：在内部创建，构造器注入，属性注入，方法注入等。 原始的办法：在类的构造函数中，直接实例化engine和tire。 export class Car {   public engine: Engine;   public ti">
+<meta name="keywords" content="Angular2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="依赖注入（1）：基础">
+<meta property="og:url" content="http://cogons.github.io/2017/04/05/依赖注入（1）：基础/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="为什么需要依赖注入：生产者的苦恼一个car对象依赖于engine对象和tire对象，也就是说car对象内部存在对engine的“调用”。 那么就存在多种方法去引用engine：在内部创建，构造器注入，属性注入，方法注入等。 原始的办法：在类的构造函数中，直接实例化engine和tire。 export class Car {   public engine: Engine;   public ti">
+<meta property="og:updated_time" content="2017-10-11T17:29:07.403Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="依赖注入（1）：基础">
+<meta name="twitter:description" content="为什么需要依赖注入：生产者的苦恼一个car对象依赖于engine对象和tire对象，也就是说car对象内部存在对engine的“调用”。 那么就存在多种方法去引用engine：在内部创建，构造器注入，属性注入，方法注入等。 原始的办法：在类的构造函数中，直接实例化engine和tire。 export class Car {   public engine: Engine;   public ti">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://cogons.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-依赖注入（1）：基础" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/04/05/依赖注入（1）：基础/" class="article-date">
+  <time datetime="2017-04-05T05:21:41.000Z" itemprop="datePublished">2017-04-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      依赖注入（1）：基础
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="为什么需要依赖注入：生产者的苦恼"><a href="#为什么需要依赖注入：生产者的苦恼" class="headerlink" title="为什么需要依赖注入：生产者的苦恼"></a>为什么需要依赖注入：生产者的苦恼</h1><p>一个car对象依赖于engine对象和tire对象，也就是说car对象内部存在对engine的“调用”。</p>
+<p>那么就存在多种方法去引用engine：在内部创建，构造器注入，属性注入，方法注入等。</p>
+<p>原始的办法：在类的构造函数中，直接实例化engine和tire。</p>
+<pre><code>export class Car {
+  public engine: Engine;
+  public tires: Tires;
+  public description = &apos;No DI&apos;;
+  constructor() {
+    this.engine = new Engine();
+    this.tires = new Tires();
+  }
+}
+</code></pre><p>问题在于：如果engine和tire的实例化方法发生变化（例如，需要传进参数），那么不得不去修改car的构造函数。</p>
+<p>我们将这个问题称为：car类过于脆弱，缺乏弹性，难以测试。</p>
+<h1 id="如何实现依赖注入：生产者的转变"><a href="#如何实现依赖注入：生产者的转变" class="headerlink" title="如何实现依赖注入：生产者的转变"></a>如何实现依赖注入：生产者的转变</h1><p>改进方向：让car更强壮，有弹性，可测试。</p>
+<p>改进方式：把car的构造函数改造成使用DI的版本。</p>
+<pre><code>constructor(public engine: Engine, public tires: Tires) { }
+</code></pre><p>嗯？这是啥？</p>
+<blockquote>
+<p>我们把依赖的定义移到了构造函数中。 “Car类不再创建引擎或者轮胎。 它仅仅‘消费’它们。”</p>
+</blockquote>
+<p>嗯？什么意思？</p>
+<p>我们看一下改进之后，我们如何创建一辆车。</p>
+<pre><code>let car = new Car(new Engine(), new Tires());
+</code></pre><p>我们可以看到，只要满足API需求的engine和tire都可以传进来。</p>
+<p>如果我们有一个新的engine，叫engine2。</p>
+<pre><code>class Engine2 {
+  constructor(public cylinders: number) { }
+}
+</code></pre><p>此时我们创建带有engine2的车。</p>
+<pre><code>let car = new Car(new Engine2(12), new Tires());
+</code></pre><p>通过依赖注入，我们可以很容易地在外部模拟出各类的engine和tire。</p>
+<p>从而在不改变car的情况下，注入car，对car进行测试。</p>
+<pre><code>let car = new Car(new MockEngine(), new MockTires());
+</code></pre><p>至此，我们大概了解了什么是依赖注入。</p>
+<p>依赖注入是一种编程模式，它可以让类从外部获得他所依赖的东西，而不需要亲自创建他们。</p>
+<h1 id="巨型工厂：消费者的苦恼"><a href="#巨型工厂：消费者的苦恼" class="headerlink" title="巨型工厂：消费者的苦恼"></a>巨型工厂：消费者的苦恼</h1><p>在引入依赖注入以后，我们想创建一辆车，我们需要自己创建engine和tire。</p>
+<p>我们自然而然地可以建造一个巨型工厂来帮助我们实现各种依赖实例的创建。</p>
+<pre><code>import { Engine, Tires, Car } from &apos;./car&apos;;
+
+export class CarFactory {
+  createCar() {
+    let car = new Car(this.createEngine(), this.createTires());
+    car.description = &apos;Factory&apos;;
+    return car;
+  }
+  createEngine() {
+    return new Engine();
+  }
+  createTires() {
+    return new Tires();
+  }
+}
+</code></pre><p>问题又来了：随着规模的增加，工厂方法之间的依赖会变得很复杂，维护起来困难。</p>
+<p>问题的根源在于：</p>
+<p>改进方向：如果能简单的列出想建造的东西，而不用定义该把哪些依赖注入到哪些对象中，那该多好！</p>
+<p>改进方式：注入器（injector）</p>
+<h1 id="注入器"><a href="#注入器" class="headerlink" title="注入器"></a>注入器</h1><p>用这个注入器注册一些类，它会弄明白如何创建它们。</p>
+<p>当需要一个Car时，就简单的找注入器取车就可以了。</p>
+<pre><code>injector = ReflectiveInjector.resolveAndCreate([Car, Engine, Tires]);
+let car = injector.get(Car);
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://cogons.github.io/2017/04/05/依赖注入（1）：基础/" data-id="cj8nb80j400061npgveceh5b0" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Angular2/">Angular2</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/04/05/依赖注入（2）：注入器/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Neuer</strong>
+      <div class="article-nav-title">
+        
+          依赖注入（2）：注入器
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/03/27/JavaScript中的面向对象（1）：对象创建模式/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">JavaScript中的面向对象（1）：对象创建模式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Angular2/">Angular2</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Originals/">Originals</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/">blog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/translation/">translation</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Angular2/" style="font-size: 15px;">Angular2</a> <a href="/tags/Originals/" style="font-size: 20px;">Originals</a> <a href="/tags/blog/" style="font-size: 10px;">blog</a> <a href="/tags/translation/" style="font-size: 10px;">translation</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/10/11/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2017/06/14/基于JavaScript的图像处理库/">基于JavaScript的图像处理库</a>
+          </li>
+        
+          <li>
+            <a href="/2017/05/03/Add-new-include-path-to-node-gyp/">Add new include path to node-gyp</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/30/MacOS下Hadoop安装记/">MacOS下Hadoop安装记</a>
+          </li>
+        
+          <li>
+            <a href="/2017/04/23/C-编译过程中发生了什么/">C++编译过程中发生了什么</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
